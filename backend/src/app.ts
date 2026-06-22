@@ -12,6 +12,9 @@ import adminRoutes from './routes/admin.routes';
 
 const app = express();
 
+// Enable trust proxy for Vercel/CDN load balancers to allow rate limiting to work
+app.set('trust proxy', 1);
+
 // ─── Security ─────────────────────────────────────────────────────────────────
 app.use(helmet());
 app.use(
