@@ -36,9 +36,30 @@ if (env.NODE_ENV !== 'test') {
   app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 }
 
+import { prisma } from './config/prisma';
+
 // ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/api/health', async (_req, res) => {
+  try {
+    // Quick query to check database connectivity
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: 'ok',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      status: 'error',
+      database: 'disconnected',
+      error: error.message || 'Database query failed',
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
