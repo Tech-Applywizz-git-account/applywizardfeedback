@@ -64,14 +64,14 @@ export const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             Welcome back, <span className="text-primary">{user?.username}</span> 👋
           </h1>
           <p className="text-muted-foreground mt-1">Here's an overview of your feedback activity</p>
         </div>
-        <Button onClick={() => navigate('/feedback/new')} className="gap-2 shadow-lg" id="dashboard-new-feedback-btn">
+        <Button onClick={() => navigate('/feedback/new')} className="gap-2 shadow-lg w-full sm:w-auto" id="dashboard-new-feedback-btn">
           <Plus className="w-4 h-4" /> Submit Feedback
         </Button>
       </div>

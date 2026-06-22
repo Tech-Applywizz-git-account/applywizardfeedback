@@ -65,14 +65,14 @@ export const MyFeedback: React.FC = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">My Feedback</h1>
           <p className="text-muted-foreground text-sm mt-1">
             {data?.data?.total ? `${data.data.total} total submissions` : 'All your submitted feedback'}
           </p>
         </div>
-        <Button onClick={() => navigate('/feedback/new')} className="gap-2" id="new-feedback-btn">
+        <Button onClick={() => navigate('/feedback/new')} className="gap-2 w-full sm:w-auto" id="new-feedback-btn">
           <Plus className="w-4 h-4" /> New Feedback
         </Button>
       </div>

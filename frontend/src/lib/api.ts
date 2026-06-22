@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { supabase } from './supabase';
+import { useAuthStore } from '@/store/auth.store';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -9,11 +9,11 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Attach Supabase JWT to every request
+// Attach JWT token from store to every request
 api.interceptors.request.use(async (config) => {
-  const { data } = await supabase.auth.getSession();
-  if (data.session?.access_token) {
-    config.headers.Authorization = `Bearer ${data.session.access_token}`;
+  const token = useAuthStore.getState().token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
@@ -23,7 +23,7 @@ api.interceptors.response.use(
   (res) => res,
   async (error) => {
     if (error.response?.status === 401) {
-      await supabase.auth.signOut();
+      await useAuthStore.getState().logout();
       window.location.href = '/auth/login';
     }
     return Promise.reject(error);

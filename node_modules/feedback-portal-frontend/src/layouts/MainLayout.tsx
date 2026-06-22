@@ -10,14 +10,23 @@ interface MainLayoutProps {
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ title }) => {
-  const { sidebarOpen } = useUIStore();
+  const { sidebarOpen, setSidebarOpen } = useUIStore();
 
   return (
     <div className="min-h-screen bg-background">
       <Sidebar />
-      <div className={cn('transition-all duration-300', sidebarOpen ? 'ml-64' : 'ml-16')}>
+      
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      <div className={cn('transition-all duration-300 min-h-screen flex flex-col', sidebarOpen ? 'md:ml-64' : 'md:ml-16', 'ml-0')}>
         <Navbar title={title} />
-        <main className="p-4 md:p-6 animate-fade-in">
+        <main className="p-4 md:p-6 flex-1 animate-fade-in">
           <Outlet />
         </main>
       </div>
