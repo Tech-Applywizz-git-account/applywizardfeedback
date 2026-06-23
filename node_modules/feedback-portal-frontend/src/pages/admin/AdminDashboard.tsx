@@ -19,7 +19,7 @@ const YAxis = _YAxis as any;
 const Tooltip = _Tooltip as any;
 const Pie = _Pie as any;
 const Area = _Area as any;
-import { getCategoryLabel, getStatusLabel, formatDate } from '@/lib/utils';
+import { getCategoryLabel, getStatusLabel, formatDate, cn } from '@/lib/utils';
 
 const CHART_COLORS = ['#6366f1', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
 
@@ -29,10 +29,14 @@ interface StatCardProps {
   icon: React.ElementType;
   color: string;
   bgColor: string;
+  onClick?: () => void;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, bgColor }) => (
-  <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, bgColor, onClick }) => (
+  <Card 
+    className={cn("hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5", onClick ? "cursor-pointer" : "")}
+    onClick={onClick}
+  >
     <CardContent className="p-6">
       <div className="flex items-center gap-4">
         <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${bgColor}`}>
@@ -47,7 +51,10 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon: Icon, color, bg
   </Card>
 );
 
+import { useNavigate } from 'react-router-dom';
+
 export const AdminDashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['admin-stats'],
     queryFn: adminApi.getStats,
@@ -97,14 +104,14 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Total Users" value={userStats?.total || 0} icon={Users} color="text-primary" bgColor="bg-primary/10" />
-        <StatCard title="Total Feedback" value={feedbackStats?.total || 0} icon={MessageSquare} color="text-blue-600 dark:text-blue-400" bgColor="bg-blue-500/10" />
-        <StatCard title="Open / New" value={statusMap['NEW'] || 0} icon={AlertTriangle} color="text-yellow-600 dark:text-yellow-400" bgColor="bg-yellow-500/10" />
-        <StatCard title="In Progress" value={statusMap['IN_PROGRESS'] || 0} icon={Clock} color="text-orange-600 dark:text-orange-400" bgColor="bg-orange-500/10" />
-        <StatCard title="Fixed" value={statusMap['FIXED'] || 0} icon={CheckCircle2} color="text-green-600 dark:text-green-400" bgColor="bg-green-500/10" />
-        <StatCard title="Released" value={statusMap['RELEASED'] || 0} icon={Package} color="text-purple-600 dark:text-purple-400" bgColor="bg-purple-500/10" />
-        <StatCard title="Rejected" value={statusMap['REJECTED'] || 0} icon={XCircle} color="text-red-600 dark:text-red-400" bgColor="bg-red-500/10" />
-        <StatCard title="Active Users" value={userStats?.active || 0} icon={TrendingUp} color="text-teal-600 dark:text-teal-400" bgColor="bg-teal-500/10" />
+        <StatCard title="Total Users" value={userStats?.total || 0} icon={Users} color="text-primary" bgColor="bg-primary/10" onClick={() => navigate('/admin/users')} />
+        <StatCard title="Total Feedback" value={feedbackStats?.total || 0} icon={MessageSquare} color="text-blue-600 dark:text-blue-400" bgColor="bg-blue-500/10" onClick={() => navigate('/admin/feedback')} />
+        <StatCard title="Open / New" value={statusMap['NEW'] || 0} icon={AlertTriangle} color="text-yellow-600 dark:text-yellow-400" bgColor="bg-yellow-500/10" onClick={() => navigate('/admin/feedback?status=NEW')} />
+        <StatCard title="In Progress" value={statusMap['IN_PROGRESS'] || 0} icon={Clock} color="text-orange-600 dark:text-orange-400" bgColor="bg-orange-500/10" onClick={() => navigate('/admin/feedback?status=IN_PROGRESS')} />
+        <StatCard title="Fixed" value={statusMap['FIXED'] || 0} icon={CheckCircle2} color="text-green-600 dark:text-green-400" bgColor="bg-green-500/10" onClick={() => navigate('/admin/feedback?status=FIXED')} />
+        <StatCard title="Released" value={statusMap['RELEASED'] || 0} icon={Package} color="text-purple-600 dark:text-purple-400" bgColor="bg-purple-500/10" onClick={() => navigate('/admin/feedback?status=RELEASED')} />
+        <StatCard title="Rejected" value={statusMap['REJECTED'] || 0} icon={XCircle} color="text-red-600 dark:text-red-400" bgColor="bg-red-500/10" onClick={() => navigate('/admin/feedback?status=REJECTED')} />
+        <StatCard title="Active Users" value={userStats?.active || 0} icon={TrendingUp} color="text-teal-600 dark:text-teal-400" bgColor="bg-teal-500/10" onClick={() => navigate('/admin/users')} />
       </div>
 
       {/* Charts */}

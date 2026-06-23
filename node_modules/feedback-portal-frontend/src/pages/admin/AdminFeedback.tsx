@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
-import { Search, ChevronUp, ChevronDown, ExternalLink } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Search, ChevronUp, ChevronDown, ExternalLink, Paperclip } from 'lucide-react';
 import { adminApi } from '@/api/admin.api';
 import { FeedbackCategory, FeedbackStatus } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -15,28 +15,77 @@ import { useDebounce } from '@/hooks/useDebounce';
 
 export const AdminFeedback: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState<FeedbackCategory | ''>('');
-  const [status, setStatus] = useState<FeedbackStatus | ''>('');
+  const [status, setStatus] = useState<FeedbackStatus | ''>((searchParams.get('status') as FeedbackStatus) || '');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState<'createdAt' | 'updatedAt'>('createdAt');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [datePreset, setDatePreset] = useState<string>('all');
+
+  const handleDatePresetChange = (preset: string) => {
+    setDatePreset(preset);
+    setPage(1);
+    
+    const today = new Date();
+    // Use local date string YYYY-MM-DD
+    const formatDateStr = (d: Date) => {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    if (preset === 'all' || preset === 'custom') {
+      setStartDate('');
+      setEndDate('');
+    } else if (preset === 'today') {
+      const dateStr = formatDateStr(today);
+      setStartDate(dateStr);
+      setEndDate(dateStr);
+    } else if (preset === 'yesterday') {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const dateStr = formatDateStr(yesterday);
+      setStartDate(dateStr);
+      setEndDate(dateStr);
+    } else if (preset === 'last_3') {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 3);
+      setStartDate(formatDateStr(start));
+      setEndDate(formatDateStr(today));
+    } else if (preset === 'last_15') {
+      const start = new Date(today);
+      start.setDate(start.getDate() - 15);
+      setStartDate(formatDateStr(start));
+      setEndDate(formatDateStr(today));
+    } else if (preset === 'this_month') {
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      setStartDate(formatDateStr(start));
+      setEndDate(formatDateStr(today));
+    }
+  };
 
   const debouncedSearch = useDebounce(search, 400);
 
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['admin-feedback', { search: debouncedSearch, category, status, page, sortBy, sortOrder }],
+    queryKey: ['admin-feedback', { search: debouncedSearch, category, status, startDate, endDate, page, sortBy, sortOrder }],
     queryFn: () => adminApi.getFeedback({
       search: debouncedSearch || undefined,
       category: category || undefined,
       status: status || undefined,
+      startDate: startDate || undefined,
+      endDate: endDate || undefined,
       page, limit: 15, sortBy, sortOrder,
     }),
   });
 
   const feedback = data?.data?.items || [];
   const totalPages = data?.data?.totalPages || 1;
-  const hasFilters = !!(debouncedSearch || category || status);
+  const hasFilters = !!(debouncedSearch || category || status || startDate || endDate);
 
   const toggleSort = (col: 'createdAt' | 'updatedAt') => {
     if (sortBy === col) setSortOrder((o) => o === 'asc' ? 'desc' : 'asc');
@@ -100,6 +149,54 @@ export const AdminFeedback: React.FC = () => {
             ].map((s) => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={datePreset} onValueChange={handleDatePresetChange}>
+          <SelectTrigger className="w-full sm:w-40" id="admin-date-preset">
+            <SelectValue placeholder="Date Range" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Time</SelectItem>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="yesterday">Yesterday</SelectItem>
+            <SelectItem value="last_3">Last 3 Days</SelectItem>
+            <SelectItem value="last_15">Last 15 Days</SelectItem>
+            <SelectItem value="this_month">This Month</SelectItem>
+            <SelectItem value="custom">Custom Range</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {datePreset === 'custom' && (
+          <div className="flex items-center gap-2">
+            <Input 
+              type="date" 
+              value={startDate} 
+              onChange={(e) => { setStartDate(e.target.value); setPage(1); }}
+              onClick={(e) => {
+                try {
+                  if ('showPicker' in e.currentTarget) {
+                    (e.currentTarget as HTMLInputElement).showPicker();
+                  }
+                } catch (err) {}
+              }}
+              className="w-full sm:w-36 cursor-pointer"
+              title="Start Date"
+            />
+            <span className="text-muted-foreground">-</span>
+            <Input 
+              type="date" 
+              value={endDate} 
+              onChange={(e) => { setEndDate(e.target.value); setPage(1); }}
+              onClick={(e) => {
+                try {
+                  if ('showPicker' in e.currentTarget) {
+                    (e.currentTarget as HTMLInputElement).showPicker();
+                  }
+                } catch (err) {}
+              }}
+              className="w-full sm:w-36 cursor-pointer"
+              title="End Date"
+            />
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -139,7 +236,18 @@ export const AdminFeedback: React.FC = () => {
                     id={`admin-feedback-row-${item.id}`}
                   >
                     <td className="px-4 py-3">
-                      <p className="font-medium line-clamp-1 max-w-xs">{item.title}</p>
+                      <div className="flex items-center gap-3">
+                        {item.images && item.images.length > 0 ? (
+                          <div className="w-10 h-10 rounded-md overflow-hidden border shrink-0 bg-muted">
+                            <img src={item.images[0].imageUrl} alt="Thumbnail" className="w-full h-full object-cover" />
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 rounded-md border shrink-0 bg-muted/50 flex items-center justify-center" title="No images attached">
+                            <span className="text-[10px] text-muted-foreground/50 font-medium">None</span>
+                          </div>
+                        )}
+                        <p className="font-medium line-clamp-2 max-w-xs">{item.title}</p>
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div>

@@ -49,6 +49,8 @@ export const FeedbackQueryDto = PaginationDto.extend({
   search: z.string().optional(),
   category: z.nativeEnum(FeedbackCategory).optional(),
   status: z.nativeEnum(FeedbackStatus).optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
   sortBy: z.enum(['createdAt', 'updatedAt']).default('createdAt'),
   sortOrder: z.enum(['asc', 'desc']).default('desc'),
 });

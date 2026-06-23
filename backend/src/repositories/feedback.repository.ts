@@ -18,7 +18,7 @@ export class FeedbackRepository {
   }
 
   async findAll(query: FeedbackQueryDtoType) {
-    const { page, limit, search, category, status, sortBy, sortOrder } = query;
+    const { page, limit, search, category, status, startDate, endDate, sortBy, sortOrder } = query;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -30,6 +30,15 @@ export class FeedbackRepository {
     }
     if (category) where.category = category;
     if (status) where.status = status;
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setUTCHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
 
     const [total, items] = await Promise.all([
       prisma.feedback.count({ where }),
@@ -50,7 +59,7 @@ export class FeedbackRepository {
   }
 
   async findByUserId(userId: string, query: FeedbackQueryDtoType) {
-    const { page, limit, search, category, status, sortBy, sortOrder } = query;
+    const { page, limit, search, category, status, startDate, endDate, sortBy, sortOrder } = query;
     const skip = (page - 1) * limit;
 
     const where: any = { userId };
@@ -62,6 +71,15 @@ export class FeedbackRepository {
     }
     if (category) where.category = category;
     if (status) where.status = status;
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setUTCHours(23, 59, 59, 999);
+        where.createdAt.lte = end;
+      }
+    }
 
     const [total, items] = await Promise.all([
       prisma.feedback.count({ where }),

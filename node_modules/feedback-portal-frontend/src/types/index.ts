@@ -86,6 +86,8 @@ export interface FeedbackQuery {
   search?: string;
   category?: FeedbackCategory;
   status?: FeedbackStatus;
+  startDate?: string;
+  endDate?: string;
   sortBy?: 'createdAt' | 'updatedAt';
   sortOrder?: 'asc' | 'desc';
 }
