@@ -26,19 +26,19 @@ const AppInit: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   }, []);
 
   useEffect(() => {
-    // Initialize auth from Supabase session
+    // Initialize auth from stored token
     const initAuth = async () => {
       setLoading(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setToken(session.access_token);
-        // Fetch profile
+      const token = useAuthStore.getState().token;
+      
+      if (token) {
         try {
           const { authApi } = await import('./api/auth.api');
           const { data: profileRes } = await authApi.me();
           setUser(profileRes);
         } catch {
           setUser(null);
+          setToken(null);
         }
       } else {
         setUser(null);
@@ -47,18 +47,6 @@ const AppInit: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     };
 
     initAuth();
-
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_OUT' || !session) {
-        setUser(null);
-        setToken(null);
-      } else if (session) {
-        setToken(session.access_token);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, []);
 
   return <>{children}</>;
