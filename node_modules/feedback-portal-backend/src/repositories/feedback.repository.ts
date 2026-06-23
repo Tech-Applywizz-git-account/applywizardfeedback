@@ -114,7 +114,7 @@ export class FeedbackRepository {
   }
 
   async getStats() {
-    const [total, byStatus, byCategory, recentTrend] = await Promise.all([
+    const [total, byStatus, byCategory, recentTrendRaw] = await Promise.all([
       prisma.feedback.count(),
       prisma.feedback.groupBy({
         by: ['status'],
@@ -132,6 +132,11 @@ export class FeedbackRepository {
         ORDER BY date ASC
       `,
     ]);
+
+    const recentTrend = recentTrendRaw.map(t => ({
+      date: t.date,
+      count: Number(t.count)
+    }));
 
     return { total, byStatus, byCategory, recentTrend };
   }
