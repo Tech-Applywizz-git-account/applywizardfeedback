@@ -11,6 +11,13 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_TYPES = ['image/png', 'image/jpg', 'image/jpeg', 'image/webp'];
 
 export class FeedbackService {
+  private async ensureBucketExists() {
+    const { data: buckets } = await supabaseAdmin.storage.listBuckets();
+    if (!buckets?.find((b) => b.name === BUCKET)) {
+      await supabaseAdmin.storage.createBucket(BUCKET, { public: true });
+    }
+  }
+
   async create(userId: string, data: CreateFeedbackDtoType, files: Express.Multer.File[]) {
     // Create feedback
     const feedback = await feedbackRepository.create(userId, data);
@@ -20,6 +27,8 @@ export class FeedbackService {
       if (files.length > 10) {
         throw new AppError('Maximum 10 images allowed', 400);
       }
+
+      await this.ensureBucketExists();
 
       const imageData: Array<{ imageUrl: string; imagePath: string }> = [];
 
@@ -43,7 +52,7 @@ export class FeedbackService {
 
         if (error) {
           console.error('Upload error:', error);
-          continue;
+          throw new AppError(`Failed to upload image: ${error.message}`, 500);
         }
 
         const { data: publicUrl } = supabaseAdmin.storage

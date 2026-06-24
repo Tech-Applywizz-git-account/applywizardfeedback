@@ -69,10 +69,18 @@ export const SubmitFeedback: React.FC = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
+    onDropRejected: (fileRejections) => {
+      const errorMsg = fileRejections[0]?.errors[0]?.message || 'File not supported or too large';
+      toast({
+        title: 'Image rejected',
+        description: errorMsg,
+        variant: 'destructive',
+      });
+    },
     accept: {
-      'image/png': [],
-      'image/jpeg': [],
-      'image/webp': [],
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/webp': ['.webp'],
     } as any,
     maxSize: 10 * 1024 * 1024,
     maxFiles: 10,

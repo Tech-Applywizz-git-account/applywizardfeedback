@@ -8,7 +8,7 @@ export const feedbackApi = {
     formData.append('title', data.title);
     formData.append('category', data.category);
     formData.append('description', data.description);
-    if (images) {
+    if (images && images.length > 0) {
       images.forEach((file) => formData.append('images', file));
     }
     const res = await api.post('/feedback', formData, {
